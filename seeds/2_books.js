@@ -114,5 +114,11 @@ exports.seed = function(knex) {
           created_at: new Date('2016-06-26 14:26:16 UTC'),
           updated_at: new Date('2016-06-26 14:26:16 UTC')
         }]);
-    });
+      })
+      .then(() => {
+        return knex.raw(
+          // setting inital value for sequence table - after we've done all ouf our insertions and seeding
+          "SELECT setval('books_id_seq', (SELECT MAX(id) FROM books));"
+        );
+      });
 };
