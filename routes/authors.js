@@ -16,8 +16,14 @@ router.get('/authors', (_req, res, next) => {
 });
 
 router.get('/authors/:id', (req, res, next) => {
+  const id = Number.parseInt(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return next();
+  }
+
   knex('authors')
-    .where('id', req.params.id)
+    .where('id', id)
     .first()
     .then((author) => {
       if (!author) {
@@ -64,6 +70,12 @@ router.patch('/authors/:id', (req, res, next) => {
 });
 
 router.delete('/authors/:id', (req, res, next) => {
+  const id = Number.parseInt(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return next();
+  }
+
   knex('authors')
     .where('id', req.params.id)
     .first()
@@ -86,9 +98,15 @@ router.delete('/authors/:id', (req, res, next) => {
 });
 
 router.get('/authors/:id/books', (req, res, next) => {
+  const id = Number.parseInt(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return next();
+  }
+
   knex('books')
     .orderBy('id')
-    .where('author_id', req.params.id)
+    .where('author_id', id)
     .then((books) => {
       res.send(books);
     })
