@@ -157,6 +157,7 @@ router.patch('/books/:id', (req, res, next) => {
         .catch((err) => {
           next(err);
         });
+    });
 });
 
 router.delete('/books/:id', (req, res, next) => {
