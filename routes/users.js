@@ -37,14 +37,19 @@ router.post('/users', (req, res, next) => {
   }
 
   knex('users')
+    // this 1=1 results in equality check and doesn't need to go and grab all rows and does instead a t or f check
+    // goes from all columns to just one for t/f
+    // more performant
+    .select(knex.raw('1=1'))
     .where('email', newUser.email)
     .first()
-    .then((invalidUser) => {
-      if (invalidUser) {
+    .then((emailExists) => {
+      if (emailExists) {
         return res
           .status(400)
           .set('Content-Type', 'text/plain')
           .send('Email already exists');
+          //res.send doesn't end all proccesses so need return statement
       }
 
       bcrypt.hash(newUser.password, 12, (hashErr, hashed_password) => {
@@ -52,6 +57,8 @@ router.post('/users', (req, res, next) => {
           return next(hashErr);
         }
 
+        // cannot return this promise thus we need two seperate catches
+        // can't return because bcrypt is not with promises
         knex('users')
           .insert({
             first_name: newUser.first_name,
