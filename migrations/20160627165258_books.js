@@ -1,5 +1,6 @@
 'use strict';
-exports.up = function(knex) {
+
+module.exports.up = function(knex) {
   return knex.schema.createTable('books', (table) => {
     table.increments();
     table.integer('author_id')
@@ -15,6 +16,6 @@ exports.up = function(knex) {
   });
 };
 
-exports.down = function(knex) {
+module.exports.down = function(knex) {
   return knex.schema.dropTable('books');
 };

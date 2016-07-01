@@ -1,5 +1,6 @@
 'use strict';
-exports.up = function(knex) {
+
+module.exports.up = function(knex) {
   return knex.schema.createTable('authors', (table) => {
     table.increments();
     table.string('first_name').notNullable().defaultTo('');
@@ -10,6 +11,6 @@ exports.up = function(knex) {
   });
 };
 
-exports.down = function(knex) {
+module.exports.down = function(knex) {
   return knex.schema.dropTable('authors');
 };

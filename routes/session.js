@@ -11,9 +11,7 @@ router.post('/session', (req, res, next) => {
     .first()
     .then((user) => {
       if (!user) {
-        return res
-          .set('Content-Type', 'text/plain')
-          .sendStatus(401);
+        return res.sendStatus(401);
       }
 
       const hashed_password = user.hashed_password;
@@ -25,13 +23,15 @@ router.post('/session', (req, res, next) => {
 
         if (!isMatch) {
           // User password was incorrect
-          return res
-            .set('Content-Type', 'text/plain')
-            .sendStatus(401);
+          return res.sendStatus(401);
         }
 
         // User is authenticated
-        req.session.user = user;
+        // all we want to send and save in cookie is the user id and not everything about the user
+        // http only cookie - can't access via javascript (for secuirty)
+        req.session.userId = user.id;
+        // takes the req.session and uses it in another seperate cookie later
+        // above line not related to below line
         res.cookie('loggedIn', true);
         res.sendStatus(200);
       });

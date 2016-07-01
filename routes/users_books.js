@@ -3,10 +3,9 @@
 const express = require('express');
 const router = express.Router();
 const knex = require('../knex');
-const bcrypt = require('bcrypt');
 
 const checkAuth = function(req, res, next) {
-  if (!req.session.user) {
+  if (!req.session.userId) {
     return res.sendStatus(401);
   }
 
@@ -14,7 +13,7 @@ const checkAuth = function(req, res, next) {
 }
 
 router.get('/users/books', checkAuth, (req, res, next) => {
-  const userId = req.session.user.id;
+  const userId = req.session.userId;
 
   knex('users_books')
     .innerJoin('books', 'users_books.book_id', 'books.id')
@@ -32,7 +31,7 @@ router.get('/users/books', checkAuth, (req, res, next) => {
 });
 
 router.get('/users/books/:bookId', checkAuth, (req, res, next) => {
-  const userId = req.session.user.id;
+  const userId = req.session.userId;
   const bookId = Number.parseInt(req.params.bookId);
 
   if (Number.isNaN(bookId)) {
@@ -44,12 +43,13 @@ router.get('/users/books/:bookId', checkAuth, (req, res, next) => {
       'users_books.user_id': userId,
       'users_books.book_id': bookId
     })
-    .then((results) => {
-      if (!results[0]) {
+    .first()
+    .then((book) => {
+      if (!book) {
         return next();
       }
 
-      res.send(results[0]);
+      res.send(book);
     })
     .catch((err) => {
       next(err);
@@ -57,20 +57,28 @@ router.get('/users/books/:bookId', checkAuth, (req, res, next) => {
 });
 
 router.post('/users/books/:bookId', checkAuth, (req, res, next) => {
-  const userId = req.session.user.id;
+  const userId = req.session.userId;
   const bookId = Number.parseInt(req.params.bookId);
 
   if (Number.isNaN(bookId)) {
     return next();
   }
+  knex('books')
+    .where('id', bookId)
+    .first()
+    .then((book) => {
+      if (!book) {
+        return next();
+      }
 
-  knex('users_books')
-    .insert({
-      user_id: userId,
-      book_id: bookId
-    }, '*')
-    .then((results) => {
-      res.send(results[0]);
+      return knex('users_books')
+        .insert({
+          user_id: userId,
+          book_id: bookId
+        }, '*')
+        .then((results) => {
+          res.send(results[0]);
+        });
     })
     .catch((err) => {
       next(err);
@@ -78,7 +86,7 @@ router.post('/users/books/:bookId', checkAuth, (req, res, next) => {
 });
 
 router.delete('/users/books/:bookId', checkAuth, (req, res, next) => {
-  const userId = req.session.user.id;
+  const userId = req.session.userId;
   const bookId = Number.parseInt(req.params.bookId);
 
   if (Number.isNaN(bookId)) {
@@ -86,21 +94,25 @@ router.delete('/users/books/:bookId', checkAuth, (req, res, next) => {
   }
 
   knex('users_books')
-    .where('user_id', userId)
-    .where('book_id', bookId)
+    .where({
+      user_id: userId,
+      book_id: bookId
+    })
     .first()
-    .then((usersBook) => {
-      if (!usersBook) {
+    .then((userBook) => {
+      if (!userBook) {
         return next();
       }
 
       return knex('users_books')
         .del()
-        .where('user_id', userId)
-        .where('book_id', bookId)
+        .where({
+          user_id: userId,
+          book_id: bookId
+        })
         .then(() => {
-          delete usersBook.id;
-          res.send(usersBook);
+          delete userBook.id;
+          res.send(userBook);
         });
     })
     .catch((err) => {
